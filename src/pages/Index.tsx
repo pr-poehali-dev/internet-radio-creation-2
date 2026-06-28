@@ -2,6 +2,15 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import AuthModal, { AuthUser } from '@/components/AuthModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const COVERS = {
   neon: 'https://cdn.poehali.dev/projects/ffbf9524-524f-40ab-80dd-5955e7e68687/files/46580e4e-48de-4491-a6ca-16c2d144d835.jpg',
@@ -60,12 +69,47 @@ const Index = () => {
   const [current, setCurrent] = useState(channels[0]);
   const [query, setQuery] = useState('');
   const [activeGenre, setActiveGenre] = useState('Все');
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [favorites, setFavorites] = useState<number[]>([]);
 
   const genres = ['Все', 'Хиты', 'Ретро', 'Лаунж'];
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('mitya_user');
+    if (saved) {
+      try { setUser(JSON.parse(saved)); } catch { /* ignore */ }
+    }
+    const favs = localStorage.getItem('mitya_favorites');
+    if (favs) {
+      try { setFavorites(JSON.parse(favs)); } catch { /* ignore */ }
+    }
+  }, []);
+
+  const handleAuth = (u: AuthUser, token: string) => {
+    setUser(u);
+    localStorage.setItem('mitya_user', JSON.stringify(u));
+    localStorage.setItem('mitya_token', token);
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('mitya_user');
+    localStorage.removeItem('mitya_token');
+  };
+
+  const toggleFavorite = (id: number) => {
+    if (!user) { setAuthOpen(true); return; }
+    setFavorites((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      localStorage.setItem('mitya_favorites', JSON.stringify(next));
+      return next;
+    });
+  };
 
   const playChannel = (ch: typeof channels[0]) => {
     setCurrent(ch);
@@ -140,12 +184,47 @@ const Index = () => {
               </li>
             ))}
           </ul>
-          <Button onClick={togglePlay} className="gradient-radio border-0 rounded-full font-semibold hover-scale">
-            <Icon name={playing ? 'Pause' : 'Headphones'} size={18} className="mr-2" />
-            {playing ? 'В эфире' : 'Слушать'}
-          </Button>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 glass rounded-full pl-1.5 pr-4 py-1.5 hover:border-primary/50 transition-all">
+                    <span className="w-8 h-8 rounded-full gradient-radio flex items-center justify-center text-white font-bold text-sm">
+                      {user.name.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="text-sm font-medium hidden sm:inline">{user.name}</span>
+                    <Icon name="ChevronDown" size={16} className="text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="glass border-primary/30 rounded-2xl w-56">
+                  <DropdownMenuLabel className="font-display">
+                    {user.name}
+                    <p className="text-xs text-muted-foreground font-body font-normal">{user.email}</p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="gap-2 cursor-pointer">
+                    <Icon name="Heart" size={16} /> Избранное ({favorites.length})
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="gap-2 cursor-pointer text-destructive">
+                    <Icon name="LogOut" size={16} /> Выйти
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button onClick={() => setAuthOpen(true)} variant="ghost" className="rounded-full font-medium hover:bg-muted hidden sm:flex">
+                <Icon name="User" size={18} className="mr-2" />
+                Войти
+              </Button>
+            )}
+            <Button onClick={togglePlay} className="gradient-radio border-0 rounded-full font-semibold hover-scale">
+              <Icon name={playing ? 'Pause' : 'Headphones'} size={18} className="mr-2" />
+              {playing ? 'В эфире' : 'Слушать'}
+            </Button>
+          </div>
         </nav>
       </header>
+
+      <AuthModal open={authOpen} onOpenChange={setAuthOpen} onAuth={handleAuth} />
 
       {/* Hero */}
       <section className="relative z-10 container mx-auto pt-20 pb-16 text-center">
@@ -188,6 +267,15 @@ const Index = () => {
             ))}
           </div>
         </div>
+
+        {!user && (
+          <div className="mt-8 inline-flex flex-wrap items-center justify-center gap-3 glass rounded-2xl px-5 py-3 animate-fade-in">
+            <span className="text-sm text-muted-foreground">Зарегистрируйся и собирай любимые каналы в избранное</span>
+            <Button onClick={() => setAuthOpen(true)} size="sm" className="rounded-full gradient-radio border-0 font-semibold">
+              <Icon name="UserPlus" size={16} className="mr-1.5" /> Регистрация
+            </Button>
+          </div>
+        )}
       </section>
 
       {/* Now Playing Player */}
@@ -273,6 +361,16 @@ const Index = () => {
                   <div className="absolute bottom-3 right-3 w-12 h-12 rounded-full gradient-radio flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity box-glow">
                     <Icon name="Play" size={20} className="text-white" />
                   </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(ch.id); }}
+                    className="absolute top-3 right-3 w-9 h-9 rounded-full glass flex items-center justify-center hover:scale-110 transition-transform"
+                  >
+                    <Icon
+                      name="Heart"
+                      size={18}
+                      className={favorites.includes(ch.id) ? 'text-primary fill-primary' : 'text-white'}
+                    />
+                  </button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
