@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,23 +9,32 @@ const COVERS = {
   lofi: 'https://cdn.poehali.dev/projects/ffbf9524-524f-40ab-80dd-5955e7e68687/files/3c7864c8-83e0-4b1d-be0a-d3501586edea.jpg',
 };
 
+// Рабочий демо-поток. Замените на свой URL потока radiomitya.ru
+const STREAM_URL = 'https://stream.radioparadise.com/aac-128';
+
 const channels = [
-  { id: 1, name: 'Neon Pulse', genre: 'Electronic', listeners: '12.4K', cover: COVERS.neon },
-  { id: 2, name: 'Synthwave FM', genre: 'Synthwave', listeners: '8.1K', cover: COVERS.synth },
-  { id: 3, name: 'Chill Lounge', genre: 'Lo-Fi', listeners: '21.7K', cover: COVERS.lofi },
-  { id: 4, name: 'Bass Drive', genre: 'Electronic', listeners: '5.3K', cover: COVERS.neon },
-  { id: 5, name: 'Retro Wave', genre: 'Synthwave', listeners: '9.8K', cover: COVERS.synth },
-  { id: 6, name: 'Night Study', genre: 'Lo-Fi', listeners: '33.2K', cover: COVERS.lofi },
+  { id: 1, name: 'Радио Митя — Основной', genre: 'Хиты', listeners: '12.4K', cover: COVERS.neon, stream: STREAM_URL },
+  { id: 2, name: 'Митя Ретро', genre: 'Ретро', listeners: '8.1K', cover: COVERS.synth, stream: STREAM_URL },
+  { id: 3, name: 'Митя Лаунж', genre: 'Лаунж', listeners: '21.7K', cover: COVERS.lofi, stream: STREAM_URL },
+  { id: 4, name: 'Митя Драйв', genre: 'Хиты', listeners: '5.3K', cover: COVERS.neon, stream: STREAM_URL },
+  { id: 5, name: 'Митя 80-е', genre: 'Ретро', listeners: '9.8K', cover: COVERS.synth, stream: STREAM_URL },
+  { id: 6, name: 'Митя Вечер', genre: 'Лаунж', listeners: '33.2K', cover: COVERS.lofi, stream: STREAM_URL },
 ];
 
 const playlists = [
-  { id: 1, name: 'Космический драйв', genre: 'Electronic', tracks: 48, cover: COVERS.neon },
-  { id: 2, name: 'Ретро ночь', genre: 'Synthwave', tracks: 32, cover: COVERS.synth },
-  { id: 3, name: 'Спокойный вечер', genre: 'Lo-Fi', tracks: 64, cover: COVERS.lofi },
-  { id: 4, name: 'Энергия утра', genre: 'Electronic', tracks: 27, cover: COVERS.neon },
+  { id: 1, name: 'Лучшее на Радио Митя', genre: 'Хиты', tracks: 48, cover: COVERS.neon },
+  { id: 2, name: 'Ретро ночь', genre: 'Ретро', tracks: 32, cover: COVERS.synth },
+  { id: 3, name: 'Спокойный вечер', genre: 'Лаунж', tracks: 64, cover: COVERS.lofi },
+  { id: 4, name: 'Энергия утра', genre: 'Хиты', tracks: 27, cover: COVERS.neon },
 ];
 
 const navItems = ['Главная', 'Плеер', 'Каналы', 'Плейлисты', 'О радио', 'Контакты'];
+
+const socials = [
+  { name: 'ВКонтакте', icon: 'Share2', url: '#' },
+  { name: 'Одноклассники', icon: 'Circle', url: '#' },
+  { name: 'Макс', icon: 'MessageCircle', url: '#' },
+];
 
 const Equalizer = ({ active }: { active: boolean }) => (
   <div className="flex items-end gap-[3px] h-8">
@@ -44,12 +53,41 @@ const Equalizer = ({ active }: { active: boolean }) => (
 );
 
 const Index = () => {
-  const [playing, setPlaying] = useState(true);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [volume, setVolume] = useState(0.8);
   const [current, setCurrent] = useState(channels[0]);
   const [query, setQuery] = useState('');
   const [activeGenre, setActiveGenre] = useState('Все');
 
-  const genres = ['Все', 'Electronic', 'Synthwave', 'Lo-Fi'];
+  const genres = ['Все', 'Хиты', 'Ретро', 'Лаунж'];
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume]);
+
+  const playChannel = (ch: typeof channels[0]) => {
+    setCurrent(ch);
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.src = ch.stream;
+    setLoading(true);
+    audio.play().then(() => { setPlaying(true); setLoading(false); }).catch(() => { setPlaying(false); setLoading(false); });
+  };
+
+  const togglePlay = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) {
+      audio.pause();
+      setPlaying(false);
+    } else {
+      if (!audio.src) audio.src = current.stream;
+      setLoading(true);
+      audio.play().then(() => { setPlaying(true); setLoading(false); }).catch(() => { setPlaying(false); setLoading(false); });
+    }
+  };
 
   const filteredChannels = useMemo(
     () =>
@@ -75,6 +113,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden relative">
+      <audio ref={audioRef} preload="none" onPlaying={() => setPlaying(true)} onPause={() => setPlaying(false)} onWaiting={() => setLoading(true)} onPlay={() => setLoading(true)} />
+
       {/* Animated background blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-primary/20 blur-[120px] animate-float-bg" />
@@ -89,7 +129,7 @@ const Index = () => {
             <div className="w-11 h-11 rounded-2xl gradient-radio flex items-center justify-center box-glow">
               <Icon name="Radio" className="text-white" size={24} />
             </div>
-            <span className="font-display text-2xl font-bold tracking-wide">PULSE<span className="gradient-text">.FM</span></span>
+            <span className="font-display text-2xl font-bold tracking-wide">РАДИО <span className="gradient-text">МИТЯ</span></span>
           </div>
           <ul className="hidden lg:flex items-center gap-8">
             {navItems.map((item) => (
@@ -100,9 +140,9 @@ const Index = () => {
               </li>
             ))}
           </ul>
-          <Button className="gradient-radio border-0 rounded-full font-semibold hover-scale">
-            <Icon name="Headphones" size={18} className="mr-2" />
-            Слушать
+          <Button onClick={togglePlay} className="gradient-radio border-0 rounded-full font-semibold hover-scale">
+            <Icon name={playing ? 'Pause' : 'Headphones'} size={18} className="mr-2" />
+            {playing ? 'В эфире' : 'Слушать'}
           </Button>
         </nav>
       </header>
@@ -111,14 +151,14 @@ const Index = () => {
       <section className="relative z-10 container mx-auto pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-8 animate-fade-in">
           <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-          <span className="text-sm text-muted-foreground">В эфире прямо сейчас · 47K слушателей</span>
+          <span className="text-sm text-muted-foreground">radiomitya.ru · В эфире 24/7</span>
         </div>
         <h1 className="font-display text-6xl md:text-8xl font-bold leading-none mb-6 animate-fade-in">
-          ТВОЯ ВОЛНА<br />
-          <span className="gradient-text text-glow-pink">ЗВУЧИТ ЗДЕСЬ</span>
+          РАДИО МИТЯ<br />
+          <span className="gradient-text text-glow-pink">ЗВУЧИТ ДЛЯ ТЕБЯ</span>
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in">
-          Тысячи каналов и плейлистов на любой вкус. Найди свой ритм и слушай без ограничений.
+          Любимые хиты, ретро и лаунж без остановки. Включай эфир и слушай где угодно.
         </p>
 
         {/* Search */}
@@ -165,7 +205,7 @@ const Index = () => {
               </div>
             </div>
             <div className="flex-1 text-center md:text-left w-full">
-              <p className="text-sm text-secondary font-medium mb-1">{current.genre} · В ЭФИРЕ</p>
+              <p className="text-sm text-secondary font-medium mb-1">{current.genre} · {loading ? 'ЗАГРУЗКА…' : playing ? 'В ЭФИРЕ' : 'ПАУЗА'}</p>
               <h3 className="font-display text-3xl font-bold mb-4">{current.name}</h3>
               <div className="flex items-center justify-center md:justify-start gap-4 mb-5">
                 <Equalizer active={playing} />
@@ -175,21 +215,24 @@ const Index = () => {
                 </span>
               </div>
               <div className="flex items-center justify-center md:justify-start gap-4">
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
-                  <Icon name="SkipBack" size={22} />
-                </Button>
                 <Button
-                  onClick={() => setPlaying(!playing)}
+                  onClick={togglePlay}
                   className="w-16 h-16 rounded-full gradient-radio border-0 box-glow hover-scale"
                 >
-                  <Icon name={playing ? 'Pause' : 'Play'} size={28} className="text-white" />
+                  <Icon name={loading ? 'Loader' : playing ? 'Pause' : 'Play'} size={28} className={`text-white ${loading ? 'animate-spin' : ''}`} />
                 </Button>
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
-                  <Icon name="SkipForward" size={22} />
-                </Button>
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted ml-2">
-                  <Icon name="Heart" size={22} />
-                </Button>
+                <div className="flex items-center gap-2 ml-2 w-40">
+                  <Icon name={volume === 0 ? 'VolumeX' : 'Volume2'} size={20} className="text-muted-foreground shrink-0" />
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={volume}
+                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                    className="w-full accent-primary cursor-pointer"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -216,7 +259,7 @@ const Index = () => {
             {filteredChannels.map((ch, i) => (
               <div
                 key={ch.id}
-                onClick={() => { setCurrent(ch); setPlaying(true); }}
+                onClick={() => playChannel(ch)}
                 className="group glass rounded-3xl p-5 cursor-pointer hover-scale transition-all hover:border-primary/50 animate-fade-in"
                 style={{ animationDelay: `${i * 0.07}s` }}
               >
@@ -292,13 +335,13 @@ const Index = () => {
       {/* About */}
       <section className="relative z-10 container mx-auto py-16">
         <div className="glass rounded-3xl p-8 md:p-14 text-center max-w-4xl mx-auto box-glow">
-          <h2 className="font-display text-4xl md:text-5xl font-bold mb-5">О РАДИО <span className="gradient-text">PULSE.FM</span></h2>
+          <h2 className="font-display text-4xl md:text-5xl font-bold mb-5">О РАДИО <span className="gradient-text">МИТЯ</span></h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-            Мы создаём пространство, где музыка звучит круглосуточно. Живые эфиры, кураторские плейлисты и community диджеев — всё, чтобы твой день звучал ярче.
+            Радио Митя — это музыка, которая всегда с тобой. Живые эфиры, любимые хиты и тёплая атмосфера круглые сутки на radiomitya.ru.
           </p>
           <div className="grid grid-cols-3 gap-6">
             {[
-              { n: '120+', l: 'каналов' },
+              { n: '6', l: 'каналов' },
               { n: '47K', l: 'слушателей' },
               { n: '24/7', l: 'в эфире' },
             ].map((s) => (
@@ -319,31 +362,34 @@ const Index = () => {
               <div className="w-9 h-9 rounded-xl gradient-radio flex items-center justify-center">
                 <Icon name="Radio" className="text-white" size={20} />
               </div>
-              <span className="font-display text-xl font-bold">PULSE<span className="gradient-text">.FM</span></span>
+              <span className="font-display text-xl font-bold">РАДИО <span className="gradient-text">МИТЯ</span></span>
             </div>
-            <p className="text-muted-foreground text-sm">Твоё интернет-радио без границ. Слушай где угодно.</p>
+            <p className="text-muted-foreground text-sm">radiomitya.ru — твоё радио без границ. Слушай где угодно.</p>
           </div>
           <div>
             <h4 className="font-display text-lg font-bold mb-4">КОНТАКТЫ</h4>
             <ul className="space-y-2 text-muted-foreground text-sm">
-              <li className="flex items-center gap-2"><Icon name="Mail" size={16} /> hello@pulse.fm</li>
+              <li className="flex items-center gap-2"><Icon name="Mail" size={16} /> hello@radiomitya.ru</li>
               <li className="flex items-center gap-2"><Icon name="Phone" size={16} /> +7 (999) 123-45-67</li>
-              <li className="flex items-center gap-2"><Icon name="MapPin" size={16} /> Москва, Россия</li>
+              <li className="flex items-center gap-2"><Icon name="Globe" size={16} /> radiomitya.ru</li>
             </ul>
           </div>
           <div>
             <h4 className="font-display text-lg font-bold mb-4">МЫ В СЕТИ</h4>
-            <div className="flex gap-3">
-              {['Send', 'Instagram', 'Youtube', 'Twitter'].map((s) => (
-                <a key={s} href="#" className="w-10 h-10 rounded-full glass flex items-center justify-center hover:gradient-radio transition-all">
-                  <Icon name={s} size={18} />
+            <div className="flex flex-col gap-3">
+              {socials.map((s) => (
+                <a key={s.name} href={s.url} className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors group">
+                  <span className="w-10 h-10 rounded-full glass flex items-center justify-center group-hover:gradient-radio transition-all">
+                    <Icon name={s.icon} size={18} />
+                  </span>
+                  <span className="text-sm">{s.name}</span>
                 </a>
               ))}
             </div>
           </div>
         </div>
         <div className="text-center text-muted-foreground text-sm">
-          © 2026 PULSE.FM · Сделано с любовью к музыке
+          © 2026 Радио Митя · radiomitya.ru
         </div>
       </footer>
     </div>
