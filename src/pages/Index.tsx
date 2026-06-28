@@ -170,10 +170,10 @@ const Index = () => {
       <header className="sticky top-0 z-50 glass">
         <nav className="container mx-auto flex items-center justify-between py-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl gradient-radio flex items-center justify-center box-glow">
-              <Icon name="Radio" className="text-white" size={24} />
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <Icon name="Radio" className="text-primary-foreground" size={22} />
             </div>
-            <span className="font-display text-2xl font-bold tracking-wide">РАДИО <span className="gradient-text">МИТЯ</span></span>
+            <span className="font-display text-xl font-medium tracking-wide">Радио <span className="gradient-text">Митя</span></span>
           </div>
           <ul className="hidden lg:flex items-center gap-8">
             {navItems.map((item) => (
@@ -188,8 +188,8 @@ const Index = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 glass rounded-full pl-1.5 pr-4 py-1.5 hover:border-primary/50 transition-all">
-                    <span className="w-8 h-8 rounded-full gradient-radio flex items-center justify-center text-white font-bold text-sm">
+                  <button className="flex items-center gap-2 border border-border rounded-full pl-1.5 pr-4 py-1.5 hover:border-primary/50 transition-colors">
+                    <span className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
                       {user.name.charAt(0).toUpperCase()}
                     </span>
                     <span className="text-sm font-medium hidden sm:inline">{user.name}</span>
@@ -216,7 +216,7 @@ const Index = () => {
                 Войти
               </Button>
             )}
-            <Button onClick={togglePlay} className="gradient-radio border-0 rounded-full font-semibold hover-scale">
+            <Button onClick={togglePlay} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full font-medium">
               <Icon name={playing ? 'Pause' : 'Headphones'} size={18} className="mr-2" />
               {playing ? 'В эфире' : 'Слушать'}
             </Button>
@@ -248,7 +248,7 @@ const Index = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Поиск каналов и плейлистов по названию или жанру..."
-              className="h-14 pl-14 pr-5 rounded-full glass border-primary/30 text-base focus-visible:ring-primary"
+              className="h-14 pl-14 pr-5 rounded-full bg-card border-border text-base focus-visible:ring-primary"
             />
           </div>
           <div className="flex flex-wrap justify-center gap-2 mt-4">
@@ -269,9 +269,9 @@ const Index = () => {
         </div>
 
         {!user && (
-          <div className="mt-8 inline-flex flex-wrap items-center justify-center gap-3 glass rounded-2xl px-5 py-3 animate-fade-in">
+          <div className="mt-8 inline-flex flex-wrap items-center justify-center gap-3 border border-border rounded-2xl px-5 py-3 animate-fade-in">
             <span className="text-sm text-muted-foreground">Зарегистрируйся и собирай любимые каналы в избранное</span>
-            <Button onClick={() => setAuthOpen(true)} size="sm" className="rounded-full gradient-radio border-0 font-semibold">
+            <Button onClick={() => setAuthOpen(true)} size="sm" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium">
               <Icon name="UserPlus" size={16} className="mr-1.5" /> Регистрация
             </Button>
           </div>
@@ -280,46 +280,58 @@ const Index = () => {
 
       {/* Now Playing Player */}
       <section className="relative z-10 container mx-auto py-12">
-        <div className="glass rounded-3xl p-6 md:p-8 box-glow max-w-4xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="relative shrink-0">
-              <img
-                src={current.cover}
-                alt={current.name}
-                className={`w-40 h-40 rounded-full object-cover ${playing ? 'animate-spin-slow' : ''}`}
-              />
-              <div className="absolute inset-0 m-auto w-12 h-12 rounded-full bg-background flex items-center justify-center">
-                <div className="w-4 h-4 rounded-full gradient-radio" />
+        <div className="relative max-w-3xl mx-auto rounded-[2rem] overflow-hidden border border-border bg-card">
+          {/* Blurred cover backdrop */}
+          <div
+            className="absolute inset-0 opacity-25 blur-3xl scale-125"
+            style={{ backgroundImage: `url(${current.cover})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+          />
+          <div className="absolute inset-0 bg-card/70" />
+
+          <div className="relative p-8 md:p-10">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-7">
+              <div className="relative shrink-0">
+                <img
+                  src={current.cover}
+                  alt={current.name}
+                  className="w-32 h-32 rounded-2xl object-cover shadow-2xl"
+                />
+                {playing && (
+                  <span className="absolute -bottom-2 -right-2 flex items-center justify-center w-9 h-9 rounded-full bg-primary shadow-lg">
+                    <Equalizer active={playing} bars={4} className="h-4 gap-[2px]" barClass="w-[3px] bg-primary-foreground" />
+                  </span>
+                )}
               </div>
-            </div>
-            <div className="flex-1 text-center md:text-left w-full">
-              <p className="text-sm text-secondary font-medium mb-1">{current.genre} · {loading ? 'ЗАГРУЗКА…' : playing ? 'В ЭФИРЕ' : 'ПАУЗА'}</p>
-              <h3 className="font-display text-3xl font-bold mb-4">{current.name}</h3>
-              <div className="flex items-center justify-center md:justify-start gap-4 mb-5">
-                <Equalizer active={playing} />
-                <span className="text-sm text-muted-foreground">
-                  <Icon name="Users" size={14} className="inline mr-1" />
-                  {current.listeners}
-                </span>
-              </div>
-              <div className="flex items-center justify-center md:justify-start gap-4">
-                <Button
-                  onClick={togglePlay}
-                  className="w-16 h-16 rounded-full gradient-radio border-0 box-glow hover-scale"
-                >
-                  <Icon name={loading ? 'Loader' : playing ? 'Pause' : 'Play'} size={28} className={`text-white ${loading ? 'animate-spin' : ''}`} />
-                </Button>
-                <div className="flex items-center gap-2 ml-2 w-40">
-                  <Icon name={volume === 0 ? 'VolumeX' : 'Volume2'} size={20} className="text-muted-foreground shrink-0" />
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={volume}
-                    onChange={(e) => setVolume(parseFloat(e.target.value))}
-                    className="w-full accent-primary cursor-pointer"
-                  />
+
+              <div className="flex-1 w-full text-center sm:text-left">
+                <p className="text-xs tracking-[0.2em] uppercase text-primary font-medium mb-2">
+                  {loading ? 'Загрузка…' : playing ? '● В эфире' : 'Пауза'} · {current.genre}
+                </p>
+                <h3 className="font-display text-3xl md:text-4xl font-medium mb-1 tracking-tight">{current.name}</h3>
+                <p className="text-sm text-muted-foreground mb-7">
+                  <Icon name="Users" size={13} className="inline mr-1.5 -mt-0.5" />
+                  {current.listeners} слушают сейчас
+                </p>
+
+                <div className="flex items-center justify-center sm:justify-start gap-5">
+                  <button
+                    onClick={togglePlay}
+                    className="flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground hover:scale-105 active:scale-95 transition-transform shadow-lg"
+                  >
+                    <Icon name={loading ? 'Loader' : playing ? 'Pause' : 'Play'} size={24} className={loading ? 'animate-spin' : ''} />
+                  </button>
+                  <div className="flex items-center gap-2.5 flex-1 max-w-[180px]">
+                    <Icon name={volume === 0 ? 'VolumeX' : 'Volume2'} size={18} className="text-muted-foreground shrink-0" />
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={volume}
+                      onChange={(e) => setVolume(parseFloat(e.target.value))}
+                      className="w-full h-1 accent-primary cursor-pointer"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -329,12 +341,12 @@ const Index = () => {
 
       {/* Channels */}
       <section className="relative z-10 container mx-auto py-12">
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end justify-between mb-8 border-b border-border pb-5">
           <div>
-            <h2 className="font-display text-4xl font-bold mb-1">КАНАЛЫ</h2>
-            <p className="text-muted-foreground">Прямые эфиры на любой вкус</p>
+            <h2 className="font-display text-3xl md:text-4xl font-medium tracking-tight">Каналы</h2>
+            <p className="text-muted-foreground text-sm mt-1">Прямые эфиры на любой вкус</p>
           </div>
-          <span className="text-sm text-secondary font-medium">{filteredChannels.length} найдено</span>
+          <span className="text-xs uppercase tracking-widest text-muted-foreground">{filteredChannels.length} найдено</span>
         </div>
 
         {filteredChannels.length === 0 ? (
@@ -348,37 +360,37 @@ const Index = () => {
               <div
                 key={ch.id}
                 onClick={() => playChannel(ch)}
-                className="group glass rounded-3xl p-5 cursor-pointer hover-scale transition-all hover:border-primary/50 animate-fade-in"
-                style={{ animationDelay: `${i * 0.07}s` }}
+                className="group rounded-2xl p-3 cursor-pointer border border-border bg-card hover:border-primary/40 transition-colors animate-fade-in"
+                style={{ animationDelay: `${i * 0.06}s` }}
               >
-                <div className="relative mb-4 overflow-hidden rounded-2xl">
-                  <img src={ch.cover} alt={ch.name} className="w-full aspect-square object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
-                  <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-                    <span className="text-xs font-semibold">LIVE</span>
+                <div className="relative mb-4 overflow-hidden rounded-xl">
+                  <img src={ch.cover} alt={ch.name} className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/10 to-transparent" />
+                  <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="text-[10px] tracking-widest font-medium uppercase">Live</span>
                   </div>
-                  <div className="absolute bottom-3 right-3 w-12 h-12 rounded-full gradient-radio flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity box-glow">
-                    <Icon name="Play" size={20} className="text-white" />
+                  <div className="absolute bottom-3 right-3 w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                    <Icon name="Play" size={18} />
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleFavorite(ch.id); }}
-                    className="absolute top-3 right-3 w-9 h-9 rounded-full glass flex items-center justify-center hover:scale-110 transition-transform"
+                    className="absolute top-3 right-3 w-9 h-9 rounded-full bg-card/70 backdrop-blur flex items-center justify-center hover:scale-110 transition-transform"
                   >
                     <Icon
                       name="Heart"
-                      size={18}
-                      className={favorites.includes(ch.id) ? 'text-primary fill-primary' : 'text-white'}
+                      size={17}
+                      className={favorites.includes(ch.id) ? 'text-primary fill-primary' : 'text-foreground'}
                     />
                   </button>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between px-1 pb-1">
                   <div>
-                    <h3 className="font-display text-xl font-bold">{ch.name}</h3>
-                    <p className="text-sm text-muted-foreground">{ch.genre}</p>
+                    <h3 className="font-display text-lg font-medium tracking-tight">{ch.name}</h3>
+                    <p className="text-xs text-muted-foreground">{ch.genre}</p>
                   </div>
-                  <span className="text-sm text-secondary flex items-center gap-1">
-                    <Icon name="Users" size={14} />
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Icon name="Users" size={13} />
                     {ch.listeners}
                   </span>
                 </div>
@@ -390,12 +402,12 @@ const Index = () => {
 
       {/* Playlists */}
       <section className="relative z-10 container mx-auto py-12">
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end justify-between mb-8 border-b border-border pb-5">
           <div>
-            <h2 className="font-display text-4xl font-bold mb-1">ПЛЕЙЛИСТЫ</h2>
-            <p className="text-muted-foreground">Готовые подборки треков</p>
+            <h2 className="font-display text-3xl md:text-4xl font-medium tracking-tight">Плейлисты</h2>
+            <p className="text-muted-foreground text-sm mt-1">Готовые подборки треков</p>
           </div>
-          <span className="text-sm text-secondary font-medium">{filteredPlaylists.length} найдено</span>
+          <span className="text-xs uppercase tracking-widest text-muted-foreground">{filteredPlaylists.length} найдено</span>
         </div>
 
         {filteredPlaylists.length === 0 ? (
@@ -408,20 +420,20 @@ const Index = () => {
             {filteredPlaylists.map((pl, i) => (
               <div
                 key={pl.id}
-                className="group glass rounded-3xl p-4 cursor-pointer hover-scale transition-all hover:border-secondary/50 animate-fade-in"
-                style={{ animationDelay: `${i * 0.07}s` }}
+                className="group cursor-pointer animate-fade-in"
+                style={{ animationDelay: `${i * 0.06}s` }}
               >
-                <div className="relative mb-3 overflow-hidden rounded-2xl">
-                  <img src={pl.cover} alt={pl.name} className="w-full aspect-square object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-14 h-14 rounded-full gradient-radio flex items-center justify-center box-glow">
-                      <Icon name="Play" size={24} className="text-white" />
+                <div className="relative mb-3 overflow-hidden rounded-xl border border-border">
+                  <img src={pl.cover} alt={pl.name} className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-card/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+                      <Icon name="Play" size={20} />
                     </div>
                   </div>
                 </div>
-                <h3 className="font-display text-lg font-bold leading-tight">{pl.name}</h3>
-                <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                  <Icon name="Music" size={13} />
+                <h3 className="font-display text-base font-medium leading-tight tracking-tight">{pl.name}</h3>
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                  <Icon name="Music" size={12} />
                   {pl.tracks} треков · {pl.genre}
                 </p>
               </div>
@@ -431,24 +443,24 @@ const Index = () => {
       </section>
 
       {/* About */}
-      <section className="relative z-10 container mx-auto py-16">
-        <div className="glass rounded-3xl p-8 md:p-14 text-center max-w-4xl mx-auto box-glow">
-          <h2 className="font-display text-4xl md:text-5xl font-bold mb-5">О РАДИО <span className="gradient-text">МИТЯ</span></h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+      <section className="relative z-10 container mx-auto py-20">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="font-display text-3xl md:text-5xl font-medium tracking-tight mb-5">О радио <span className="gradient-text">Митя</span></h2>
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-14">
             Радио Митя — это музыка, которая всегда с тобой. Живые эфиры, любимые хиты и тёплая атмосфера круглые сутки на radiomitya.ru.
           </p>
-          <div className="grid grid-cols-3 gap-6">
-            {[
-              { n: '6', l: 'каналов' },
-              { n: '47K', l: 'слушателей' },
-              { n: '24/7', l: 'в эфире' },
-            ].map((s) => (
-              <div key={s.l}>
-                <div className="font-display text-4xl md:text-5xl font-bold gradient-text">{s.n}</div>
-                <div className="text-muted-foreground mt-1">{s.l}</div>
-              </div>
-            ))}
-          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-px bg-border rounded-2xl overflow-hidden max-w-3xl mx-auto border border-border">
+          {[
+            { n: '6', l: 'каналов' },
+            { n: '47K', l: 'слушателей' },
+            { n: '24/7', l: 'в эфире' },
+          ].map((s) => (
+            <div key={s.l} className="bg-card py-10 text-center">
+              <div className="font-display text-4xl md:text-5xl font-medium gradient-text">{s.n}</div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground mt-2">{s.l}</div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -457,28 +469,28 @@ const Index = () => {
         <div className="grid md:grid-cols-3 gap-8 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 rounded-xl gradient-radio flex items-center justify-center">
-                <Icon name="Radio" className="text-white" size={20} />
+              <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+                <Icon name="Radio" className="text-primary-foreground" size={18} />
               </div>
-              <span className="font-display text-xl font-bold">РАДИО <span className="gradient-text">МИТЯ</span></span>
+              <span className="font-display text-lg font-medium">Радио <span className="gradient-text">Митя</span></span>
             </div>
-            <p className="text-muted-foreground text-sm">radiomitya.ru — твоё радио без границ. Слушай где угодно.</p>
+            <p className="text-muted-foreground text-sm leading-relaxed">radiomitya.ru — твоё радио без границ. Слушай где угодно.</p>
           </div>
           <div>
-            <h4 className="font-display text-lg font-bold mb-4">КОНТАКТЫ</h4>
-            <ul className="space-y-2 text-muted-foreground text-sm">
-              <li className="flex items-center gap-2"><Icon name="Mail" size={16} /> hello@radiomitya.ru</li>
-              <li className="flex items-center gap-2"><Icon name="Phone" size={16} /> +7 (999) 123-45-67</li>
-              <li className="flex items-center gap-2"><Icon name="Globe" size={16} /> radiomitya.ru</li>
+            <h4 className="text-xs uppercase tracking-widest text-muted-foreground mb-4">Контакты</h4>
+            <ul className="space-y-2.5 text-foreground/80 text-sm">
+              <li className="flex items-center gap-2.5"><Icon name="Mail" size={15} className="text-muted-foreground" /> hello@radiomitya.ru</li>
+              <li className="flex items-center gap-2.5"><Icon name="Phone" size={15} className="text-muted-foreground" /> +7 (999) 123-45-67</li>
+              <li className="flex items-center gap-2.5"><Icon name="Globe" size={15} className="text-muted-foreground" /> radiomitya.ru</li>
             </ul>
           </div>
           <div>
-            <h4 className="font-display text-lg font-bold mb-4">МЫ В СЕТИ</h4>
+            <h4 className="text-xs uppercase tracking-widest text-muted-foreground mb-4">Мы в сети</h4>
             <div className="flex flex-col gap-3">
               {socials.map((s) => (
                 <a key={s.name} href={s.url} className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors group">
-                  <span className="w-10 h-10 rounded-full glass flex items-center justify-center group-hover:gradient-radio transition-all">
-                    <Icon name={s.icon} size={18} />
+                  <span className="w-9 h-9 rounded-full border border-border flex items-center justify-center group-hover:border-primary group-hover:text-primary transition-colors">
+                    <Icon name={s.icon} size={17} />
                   </span>
                   <span className="text-sm">{s.name}</span>
                 </a>

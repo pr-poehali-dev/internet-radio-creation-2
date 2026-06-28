@@ -52,13 +52,13 @@ const AuthModal = ({ open, onOpenChange, onAuth }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass border-primary/30 rounded-3xl max-w-md p-8">
+      <DialogContent className="bg-card border-border rounded-3xl max-w-md p-8">
         <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl gradient-radio flex items-center justify-center box-glow mx-auto mb-4">
-            <Icon name="Radio" className="text-white" size={28} />
+          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mx-auto mb-4">
+            <Icon name="Radio" className="text-primary-foreground" size={24} />
           </div>
-          <h2 className="font-display text-3xl font-bold">
-            {mode === 'login' ? 'ВХОД' : 'РЕГИСТРАЦИЯ'}
+          <h2 className="font-display text-2xl font-medium tracking-tight">
+            {mode === 'login' ? 'Вход' : 'Регистрация'}
           </h2>
           <p className="text-muted-foreground text-sm mt-1">
             {mode === 'login' ? 'Войди в свой аккаунт Радио Митя' : 'Создай аккаунт и собирай избранное'}
@@ -71,7 +71,7 @@ const AuthModal = ({ open, onOpenChange, onAuth }: Props) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Имя"
-              className="h-12 rounded-xl glass border-primary/30"
+              className="h-12 rounded-xl bg-background border-border"
             />
           )}
           <Input
@@ -79,7 +79,7 @@ const AuthModal = ({ open, onOpenChange, onAuth }: Props) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
-            className="h-12 rounded-xl glass border-primary/30"
+            className="h-12 rounded-xl bg-background border-border"
           />
           <Input
             type="password"
@@ -87,7 +87,7 @@ const AuthModal = ({ open, onOpenChange, onAuth }: Props) => {
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submit()}
             placeholder="Пароль"
-            className="h-12 rounded-xl glass border-primary/30"
+            className="h-12 rounded-xl bg-background border-border"
           />
 
           {error && (
@@ -99,7 +99,7 @@ const AuthModal = ({ open, onOpenChange, onAuth }: Props) => {
           <Button
             onClick={submit}
             disabled={loading}
-            className="w-full h-12 rounded-xl gradient-radio border-0 font-semibold text-base hover-scale"
+            className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-base"
           >
             {loading ? <Icon name="Loader" size={20} className="animate-spin" /> : mode === 'login' ? 'Войти' : 'Зарегистрироваться'}
           </Button>
@@ -109,7 +109,7 @@ const AuthModal = ({ open, onOpenChange, onAuth }: Props) => {
           {mode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?'}{' '}
           <button
             onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
-            className="text-secondary font-medium hover:underline"
+            className="text-primary font-medium hover:underline"
           >
             {mode === 'login' ? 'Зарегистрироваться' : 'Войти'}
           </button>
